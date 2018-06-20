@@ -57,10 +57,14 @@
       <div class="media">
         <div class="media-body">
           <dl class="dl-horizontal">
-            <dt>Playlist Name</dt><dd>{{href}}</dd>
+            <dt>Playlist URL</dt><dd>{{href}}</dd>
+            <dt>Playlist ID</dt><dd id='strange'>{{items.0.id}}</dd>
+            <dt>Playlist Name</dt><dd>{{items.0.name}}</dd>
           </dl>
         </div>
       </div>
+
+
     </script>
 
     <script id="oauth-template" type="text/x-handlebars-template">
@@ -73,7 +77,14 @@
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+
+
+      });
+    </script>
     <script>
+
       (function() {
 
         /**
@@ -90,6 +101,7 @@
           return hashParams;
         }
 
+
         var userProfileSource = document.getElementById('user-profile-template').innerHTML,
             userProfileTemplate = Handlebars.compile(userProfileSource),
             userProfilePlaceholder = document.getElementById('user-profile');
@@ -97,6 +109,11 @@
         var userPlaylistSource = document.getElementById('user-playlist-template').innerHTML,
             userPlaylistTemplate = Handlebars.compile(userPlaylistSource),
             userPlaylistPlaceholder = document.getElementById('user-playlist');
+
+        var userPlaylistTracksSource = document.getElementById('user-playlist-template').innerHTML,
+            userPlaylistTracksTemplate = Handlebars.compile(userPlaylistTracksSource),
+            userPlaylistTracksPlaceholder = document.getElementById('user-playlist');
+
 
         var oauthSource = document.getElementById('oauth-template').innerHTML,
             oauthTemplate = Handlebars.compile(oauthSource),
@@ -118,6 +135,8 @@
               refresh_token: refresh_token
             });
 
+
+
             $.ajax({
                 url: 'https://api.spotify.com/v1/me',
                 headers: {
@@ -130,19 +149,45 @@
                   $('#loggedin').show();
                 }
             });
-
+            var id;
+            var playlist_href;
             $.ajax({
                 url: 'https://api.spotify.com/v1/me/playlists',
                 headers: {
                   'Authorization': 'Bearer ' + access_token
                 },
                 success: function(response) {
+                  id =response.items[0].id;
+                  playlist_href = response.items[0].href;
+
                   userPlaylistPlaceholder.innerHTML = userPlaylistTemplate(response);
+
+                  $('#login').hide();
+                  $('#loggedin').show();
+                  $.get('https://api.spotify.com/v1/me/playlists/' + id + "/tracks -H \"Accept: application/json\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer \"" + access_token ,function(data){
+                    console.log("data", data);
+                  })
+
+                  $.get(playlist_href + '/tracks', function(data){
+                    console.log("data", data);
+                  })
+                }
+            });
+
+            $.ajax({
+                url: 'playlist_href',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token
+                },
+                success: function(response) {
+                  console.log("response", response);
+                  userProfilePlaceholder.innerHTML = userPlaylistTracksTemplate(response);
 
                   $('#login').hide();
                   $('#loggedin').show();
                 }
             });
+
           } else {
               // render initial screen
               $('#login').show();
